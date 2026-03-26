@@ -1,15 +1,17 @@
 # Stage 1
-FROM python:3.11-slim as builder
+FROM python:3.11-alpine as builder
 WORKDIR /build
 COPY requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install --user --no-cache-dir -r requirements.txt
 
 # Stage 2
-FROM python:3.11-slim-bookworm
+FROM python:3.11-alpine
 WORKDIR /app
 
-RUN groupadd -g 10001 appgroup && \
-    useradd -u 10001 -g appgroup -m -s /bin/bash appuser
+RUN addgroup -g 10001 appgroup && \
+    adduser -u 10001 -G appgroup -h /home/appuser -D appuser && \
+    pip install --upgrade pip setuptools wheel
 
 COPY --from=builder /root/.local /home/appuser/.local
 COPY ./app ./app
